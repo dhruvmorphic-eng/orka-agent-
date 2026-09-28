@@ -36,6 +36,9 @@ class Approval(Input):
 
 
 def create_app(db_path=None):
+    if db_path is None:
+        from .settings import load_credentials
+        load_credentials()
     app = FastAPI(title="Orka · Approval-first sales agent", version="0.1.0")
     store = Store(db_path or os.environ.get("ORKA_DB", "data/orka.sqlite"))
     app.state.store = store

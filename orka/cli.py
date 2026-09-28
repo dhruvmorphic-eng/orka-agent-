@@ -190,5 +190,11 @@ class Terminal:
 
 
 def main():
+    from .settings import load_credentials
+    try:
+        load_credentials()
+    except RuntimeError as exc:
+        print(str(exc))
+        return
     default = Path(__file__).resolve().parent.parent / "data" / "orka.sqlite"
     Terminal(Store(os.environ.get("ORKA_DB", str(default)))).run()
