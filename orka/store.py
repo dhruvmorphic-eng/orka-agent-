@@ -85,11 +85,11 @@ class Store:
             task["state"] = "clarifying" if task["questions"] else "awaiting_approval"
             task["approval"] = None
             db.execute("UPDATE jobs SET status='superseded' WHERE task_id=?", (task_id,))
-            if message:
+            if message and not (task["messages"] and task["messages"][-1] == {"role": "user", "text": message}):
                 task["messages"].append({"role": "user", "text": message})
             task["messages"].append({"role": "assistant", "text":
-                "Please complete the missing details below." if task["questions"] else
-                "Your search plan is ready. Review it, revise anything needed, then approve this version."})
+                " ".join(q["question"] for q in task["questions"][:2]) if task["questions"] else
+                "Here’s the search I propose. Tell me what to change, or approve it when you’re ready."})
             task["events"].append({"type": "plan_revised", "plan_version": task["plan_version"], "at": now()})
             return self.save(db, task)
 

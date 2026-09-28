@@ -147,7 +147,15 @@ def test_zero_budget_is_explicit_and_valid(client):
     assert r["state"] == "awaiting_approval"
 
 
-def test_no_dashboard_is_served(client):
+def test_minimal_chat_and_activity_panel_are_served(client):
     r = client.get("/")
-    assert r.status_code == 404
-    assert client.get('/static/index.html').status_code == 404
+    assert r.status_code == 200
+    assert 'Message Orka' in r.text and 'Live activity' in r.text
+    assert 'brief-form' not in r.text
+    assert client.get('/static/app.js').status_code == 200
+
+
+def test_first_ai_extraction_does_not_duplicate_user_message(client):
+    task = new_task(client)
+    revised = client.app.state.store.revise(task['id'], task['revision'], BRIEF, task['request'])
+    assert len([m for m in revised['messages'] if m['role'] == 'user']) == 1

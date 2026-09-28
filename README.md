@@ -6,9 +6,9 @@ Approval-first sales research for Cnvrted. This standalone repository is the fir
 
 ## What runs today
 
-- A terminal conversation with saved tasks and messages. No dashboard or forms.
+- A minimal black chat interface with a right-hand live activity panel. Requests and actual outcomes appear as code-style logs; saved plans appear as JSON. No forms or dashboard cards. A terminal conversation is also available.
 - Optional Claude-powered extraction of a research brief from natural-language requests.
-- A no-key guided conversation that asks one missing question at a time. This mode is deterministic, not an LLM demo.
+- A no-key guided terminal conversation that asks one missing question at a time. This mode is deterministic, not an LLM demo.
 - Editable, versioned search plans, scoped explicit approval, and a persisted pending job.
 - SQLite transactions and optimistic revisions protect against stale approvals, concurrent edits, and duplicate approval clicks.
 - Editing a plan revokes approval and supersedes its pending job.
@@ -17,18 +17,18 @@ Approval-first sales research for Cnvrted. This standalone repository is the fir
 
 ## Run locally
 
-Python 3.9+ (tested on 3.9; the optional CI template targets 3.11). No browser, frontend build, or web server required.
+Python 3.9+ (tested on 3.9; the optional CI template targets 3.11). No frontend build required.
 
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-python -m orka
+python -m orka.web
 ```
 
-On macOS, after setup you can also double-click **Orka.command** to launch it in Terminal. You do not need to type code to use Orka: describe your goal and answer its questions.
+On macOS, after setup you can also double-click **Orka.command** to start the local chat app and open it in your browser. You do not need to type code to use Orka: describe your goal and answer its questions.
 
-Task data is saved in `data/orka.sqlite` and ignored by Git. Set `ORKA_DB` to select another path. Use `/tasks` and `/resume NUMBER` to return to saved work. Restarting preserves plans, messages and pending jobs.
+Task data is saved in `data/orka.sqlite` and ignored by Git. Set `ORKA_DB` to select another path. Use History in the chat to return to saved work. In the optional terminal, use `/tasks` and `/resume NUMBER`. Restarting preserves plans, messages and pending jobs.
 
 ```text
   ORKA / CNVRTED
@@ -42,9 +42,9 @@ Task data is saved in `data/orka.sqlite` and ignored by Git. Set `ORKA_DB` to se
   ✓ Search approval saved. Search is not connected yet.
 ```
 
-With AI configured, describe revisions naturally. In guided mode, `/edit geography UK` changes a field. `/help` lists the available shortcuts. `/quit` or Ctrl+C leaves safely. The CLI uses the same transaction and approval engine as the optional API; approval is never delegated to the model.
+With AI configured, describe revisions naturally. In the optional terminal’s guided mode, `/edit geography UK` changes a field. `/help` lists the available shortcuts. `/quit` or Ctrl+C leaves safely. The optional CLI (`python -m orka`) uses the same transaction and approval engine as the optional API; approval is never delegated to the model.
 
-The optional headless FastAPI service is a **single-operator localhost application**, not a hosted multi-tenant service. It rejects non-loopback callers and cross-origin writes. Do not expose it through a reverse proxy or bind it publicly. Add real authentication, tenant ownership checks, quotas and deployment hardening before remote use. No Cnvrted production APIs or databases are called.
+The FastAPI service is a **single-operator localhost application**, not a hosted multi-tenant service. It rejects non-loopback callers and cross-origin writes. Do not expose it through a reverse proxy or bind it publicly. Add real authentication, tenant ownership checks, quotas and deployment hardening before remote use. No Cnvrted production APIs or databases are called.
 
 ## Enable AI clarification
 
@@ -54,13 +54,13 @@ Setup does not contact Railway or change its settings. It writes a plaintext `da
 
 Alternatively, copy `.env.example` to `.env`, paste your key there, save, and restart Orka. Orka loads the repository's `.env` automatically. Precedence is existing shell environment, then `.env`, then the hidden setup's credentials file. Blank `.env` values do not override saved settings. Choose an available model supporting tool use in your Anthropic account. Never paste keys into the conversation or commit them.
 
-Configured AI requests send the user's message and current brief to Anthropic and can incur provider charges. Search budgets cover future discovery/extraction only, not model planning or enrichment. Without both variables, the guided terminal conversation remains usable. Live model calls have not been validated with account credentials in this initial milestone; tests use a fake provider boundary.
+Configured AI requests send the user's message and current brief to Anthropic and can incur provider charges. Search budgets cover future discovery/extraction only, not model planning or enrichment. Without both variables, the guided terminal conversation remains usable. Live model planning has been checked locally with configured credentials; automated tests use a fake provider boundary.
 
 The model can propose only a validated `Brief`. It cannot approve a task or execute tools. All structured fields remain editable and must be reviewed. Provider errors leave the saved plan unchanged. API contract: [Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create).
 
-## Optional headless API
+## Local API
 
-The CLI does not need this server. For integrations, run `python -m uvicorn orka.app:create_app --factory --host 127.0.0.1 --port 8010 --no-proxy-headers`. There is no dashboard at `/`.
+The CLI does not need this server. For integrations, run `python -m uvicorn orka.app:create_app --factory --host 127.0.0.1 --port 8010 --no-proxy-headers`. The chat interface is served at `/`.
 
 All writes require `X-Orka-Client: workspace`; browser writes must be same-origin. This is a local CSRF boundary, not user authentication.
 
@@ -81,6 +81,7 @@ Approval transactionally stores an immutable plan snapshot in `jobs`. Never have
 
 ```sh
 python -m pytest -q
+node --check orka/static/app.js
 ```
 
 Tests cover approval bypass, stale versions, repeated approvals, concurrent revisions, persistence across app instances, invalid inputs, model failures, cross-origin writes, terminal conversation/resume flows, and the model's inability to approve work.

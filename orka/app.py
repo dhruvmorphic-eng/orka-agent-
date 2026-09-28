@@ -1,9 +1,11 @@
 """Local, single-operator milestone. Bind to loopback only; see README."""
 import os
+from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -108,5 +110,12 @@ def create_app(db_path=None):
                 or task["plan_version"] != body.plan_version):
             raise HTTPException(409, "The current search plan must be explicitly approved first.")
         raise HTTPException(501, "Search adapter is not connected. No search was executed.")
+
+    static = Path(__file__).parent / "static"
+    app.mount("/static", StaticFiles(directory=static), name="static")
+
+    @app.get("/")
+    def home():
+        return FileResponse(static / "index.html")
 
     return app
