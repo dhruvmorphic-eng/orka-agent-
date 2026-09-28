@@ -1,18 +1,15 @@
 """Local, single-operator milestone. Bind to loopback only; see README."""
 import os
-from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .planner import Brief, ai_enabled, extract_brief
 from .store import Store
 
-STATIC = Path(__file__).parent / "static"
 
 
 class Input(BaseModel):
@@ -85,7 +82,7 @@ def create_app(db_path=None):
         if task["revision"] != body.revision:
             raise HTTPException(409, "This task changed. Reload before sending.")
         if not ai_enabled():
-            raise HTTPException(503, "AI planner is not configured. Use the brief form; your task is saved.")
+            raise HTTPException(503, "AI planner is not configured. Use the terminal guided conversation; your task is saved.")
         try:
             brief = await extract_brief(body.message, task["brief"])
         except (httpx.HTTPError, ValueError, KeyError):
@@ -108,11 +105,5 @@ def create_app(db_path=None):
                 or task["plan_version"] != body.plan_version):
             raise HTTPException(409, "The current search plan must be explicitly approved first.")
         raise HTTPException(501, "Search adapter is not connected. No search was executed.")
-
-    app.mount("/static", StaticFiles(directory=STATIC), name="static")
-
-    @app.get("/")
-    def home():
-        return FileResponse(STATIC / "index.html")
 
     return app

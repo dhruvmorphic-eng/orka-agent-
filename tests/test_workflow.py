@@ -147,7 +147,7 @@ def test_zero_budget_is_explicit_and_valid(client):
     assert r["state"] == "awaiting_approval"
 
 
-def test_local_ui_is_served(client):
+def test_no_dashboard_is_served(client):
     r = client.get("/")
-    assert r.status_code == 200 and "Review the search plan" in r.text
-    assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
+    assert r.status_code == 404
+    assert client.get('/static/index.html').status_code == 404

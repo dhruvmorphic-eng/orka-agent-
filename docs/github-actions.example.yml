@@ -10,4 +10,3 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
-      - run: node --check orka/static/app.js
