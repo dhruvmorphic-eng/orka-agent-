@@ -3,6 +3,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from dotenv import dotenv_values
 
 
 def settings_path():
@@ -23,7 +24,18 @@ def save_credentials(key, model, path=None):
             os.unlink(temporary)
 
 
-def load_credentials(path=None):
+def load_credentials(path=None, env_path=None):
+    # Load only documented settings; do not expand shell/environment references.
+    if path is None or env_path is not None:
+        env_file = Path(env_path) if env_path else Path(__file__).resolve().parent.parent / ".env"
+        try:
+            values = dotenv_values(env_file, interpolate=False) if env_file.exists() else {}
+            for name in ("ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "ORKA_DB"):
+                value = values.get(name)
+                if value and value.strip():
+                    os.environ.setdefault(name, value.strip())
+        except (OSError, ValueError):
+            raise RuntimeError("Local .env settings could not be read.") from None
     path = Path(path or settings_path())
     if not path.exists():
         return

@@ -52,7 +52,7 @@ On this Mac, double-click **Configure Orka.command**. Copy `ANTHROPIC_API_KEY` f
 
 Setup does not contact Railway or change its settings. It writes a plaintext `data/credentials.json` file with owner-only (`0600`) permissions, ignored by Git. This is not encrypted storage. Credentials are loaded at startup, with explicit environment variables taking priority. Setup itself does not validate the key or make billable model calls.
 
-Set `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` securely in the server environment, then restart Orka. Choose an available model supporting tool use in your Anthropic account. `.env.example` documents the variables; `.env` files are not automatically loaded. Never paste keys into the conversation or commit them.
+Alternatively, copy `.env.example` to `.env`, paste your key there, save, and restart Orka. Orka loads the repository's `.env` automatically. Precedence is existing shell environment, then `.env`, then the hidden setup's credentials file. Blank `.env` values do not override saved settings. Choose an available model supporting tool use in your Anthropic account. Never paste keys into the conversation or commit them.
 
 Configured AI requests send the user's message and current brief to Anthropic and can incur provider charges. Search budgets cover future discovery/extraction only, not model planning or enrichment. Without both variables, the guided terminal conversation remains usable. Live model calls have not been validated with account credentials in this initial milestone; tests use a fake provider boundary.
 
