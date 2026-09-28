@@ -43,7 +43,6 @@ async function send(){const text=$('prompt').value.trim();if(!text)return;await 
 $('composer').onsubmit=e=>{e.preventDefault();send();};
 $('prompt').oninput=()=>{state();$('prompt').style.height='auto';$('prompt').style.height=Math.min($('prompt').scrollHeight,130)+'px';};
 $('prompt').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)send();}};
-$('example').onclick=()=>{$('prompt').value='Find buyers actively looking for my product.';state();$('prompt').focus();};
 $('new-chat').onclick=()=>{if(busy)return;task=null;displayedApproval=null;localStorage.removeItem('orka_task');$('messages').replaceChildren();$('logs').replaceChildren();$('plan-code').hidden=true;$('idle').hidden=false;$('welcome').hidden=false;$('history').hidden=true;$('task-status').textContent='No active task';$('error').hidden=true;$('prompt').focus();};
 $('history-button').onclick=()=>run(async()=>{if(!$('history').hidden){$('history').hidden=true;return;}const tasks=await api('/tasks');$('history').replaceChildren();if(!tasks.length)$('history').append(el('p','No saved conversations yet.'));tasks.forEach(t=>{const b=el('button',t.request);b.onclick=()=>run(async()=>{$('history').hidden=true;render(await api('/tasks/'+t.id));});$('history').append(b);});$('history').hidden=false;});
 $('toggle-activity').onclick=()=>{const hidden=!$('activity-panel').hidden;$('activity-panel').hidden=hidden;$('toggle-activity').setAttribute('aria-expanded',String(!hidden));};
